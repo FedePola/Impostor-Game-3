@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🎄 Christmas Impostor Game 🎄</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #8ED1FC, #FFF);
+      color: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    .card {
+      background: #fff3e0;
+      padding: 20px;
+      border-radius: 15px;
+      width: 340px;
+      text-align: center;
+      box-shadow: 2px 2px 15px rgba(0,0,0,0.3);
+      margin: 10px;
+      transition: transform 0.3s;
+    }
+    .card:hover {
+      transform: scale(1.05);
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      background: #D32F2F;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button.secondary {
+      background: #388E3C;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .hidden {
+      display: none;
+    }
+    h2 {
+      color: #B71C1C;
+      text-shadow: 1px 1px #fff;
+    }
+    /* Christmas decorations */
+    body::before {
+      content: "🎄✨🎁🎅";
+      font-size: 40px;
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-20px); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" id="setup">
+  <h2>🎄 Christmas Impostor Game 🎄</h2>
+  <p>Player names (comma separated)</p>
+  <input id="names" placeholder="Alex, Sam, Jordan">
+  
+  <p>Number of impostors</p>
+  <input id="numImpostors" type="number" min="1" placeholder="1">
+  
+  <button onclick="startRound()">Start Round</button>
+</div>
+
+<div class="card hidden" id="reveal">
+  <h2 id="playerName"></h2>
+
+  <div id="hiddenRole">
+    <p>Tap when you're alone</p>
+    <button onclick="revealRole()">Reveal Role</button>
+  </div>
+
+  <div id="shownRole" class="hidden">
+    <p id="roleText"></p>
+    <button class="secondary" onclick="hideAndPass()">Hide & Pass</button>
+  </div>
+</div>
+
+<div class="card hidden" id="done">
+  <h2>Round Ready</h2>
+  <p>Discuss and find the impostor!</p>
+  <button onclick="startRound()">Next Round</button>
+</div>
+
+<script>
+  // WORD POOL (no repeats)
+  let secretWords = [
+    "Beeba","Pierr","Dodo","Pola","Steven","Bavly","Leo","Baher",
+    "Petro","Teo","Doris","Jessy","Christine","Karol","Heaven",
+    "Tia","Maureen","Clara","Julie","Tutu","Ben","Nathalie",
+    "Buckets","Younan","Wella","Cyril M","Soso"
+  ];
+
+  let remainingWords = [];
+  let players = [];
+  let impostorIndices = [];
+  let currentPlayer = 0;
+  let currentWord = "";
+
+  function startRound() {
+    if (players.length === 0) {
+      players = document.getElementById("names").value
+        .split(",")
+        .map(n => n.trim())
+        .filter(n => n);
+
+      if (players.length < 3) {
+        alert("Need at least 3 players");
+        return;
+      }
+    }
+
+    let numImpostors = parseInt(document.getElementById("numImpostors").value) || 1;
+    if (numImpostors >= players.length) {
+      alert("Number of impostors must be less than number of players");
+      return;
+    }
+
+    // refill words when empty
+    if (remainingWords.length === 0) {
+      remainingWords = [...secretWords];
+    }
+
+    // pick & remove word
+    const wordIndex = Math.floor(Math.random() * remainingWords.length);
+    currentWord = remainingWords.splice(wordIndex, 1)[0];
+
+    // pick impostors randomly
+    impostorIndices = [];
+    while (impostorIndices.length < numImpostors) {
+      let index = Math.floor(Math.random() * players.length);
+      if (!impostorIndices.includes(index)) {
+        impostorIndices.push(index);
+      }
+    }
+
+    currentPlayer = 0;
+
+    document.getElementById("setup").classList.add("hidden");
+    document.getElementById("done").classList.add("hidden");
+    document.getElementById("reveal").classList.remove("hidden");
+
+    resetReveal();
+    showPlayer();
+  }
+
+  function showPlayer() {
+    document.getElementById("playerName").innerText = players[currentPlayer];
+  }
+
+  function revealRole() {
+    document.getElementById("hiddenRole").classList.add("hidden");
+    document.getElementById("shownRole").classList.remove("hidden");
+
+    if (impostorIndices.includes(currentPlayer)) {
+      document.getElementById("roleText").innerText =
+        "You are the IMPOSTOR 🤫";
+    } else {
+      document.getElementById("roleText").innerText =
+        "The word is: " + currentWord;
+    }
+  }
+
+  function hideAndPass() {
+    currentPlayer++;
+
+    if (currentPlayer >= players.length) {
+      document.getElementById("reveal").classList.add("hidden");
+      document.getElementById("done").classList.remove("hidden");
+    } else {
+      resetReveal();
+      showPlayer();
+    }
+  }
+
+  function resetReveal() {
+    document.getElementById("hiddenRole").classList.remove("hidden");
+    document.getElementById("shownRole").classList.add("hidden");
+    document.getElementById("roleText").innerText = "";
+  }
+</script>
+
+</body>
+</html>
